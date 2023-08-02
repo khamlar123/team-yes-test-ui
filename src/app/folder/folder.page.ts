@@ -1,15 +1,17 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { VmService } from '../vm/vm.service';
 import { ITodo } from '../interface/i-todo';
 import { AlertController } from '@ionic/angular';
-
+import { SubSink } from 'subsink';
+import { ApiService } from '../api/api.service';
 @Component({
   selector: 'app-folder',
   templateUrl: './folder.page.html',
   styleUrls: ['./folder.page.scss'],
 })
-export class FolderPage implements OnInit {
+export class FolderPage implements OnInit, OnDestroy {
+  private sub = new SubSink();
   public page!: string;
   private activatedRoute = inject(ActivatedRoute);
   sortingOpen = false;
@@ -29,17 +31,33 @@ export class FolderPage implements OnInit {
   constructor(
     public vm: VmService,
     private alertController: AlertController,
+    private api: ApiService
   ) {}
 
+  ngOnDestroy(): void {
+   this.sub.unsubscribe();
+  }
+
   ngOnInit() {
-    this.page = this.activatedRoute.snapshot.paramMap.get('id') as string;  
+    this.page = this.activatedRoute.snapshot.paramMap.get('id') as string;
+    this.loadTodoFunc();
+  }
+
+  loadTodoFunc():void{
+      this.sub.sink = this.api.getTodo().subscribe(res => {
+        if(res){
+            this.vm.todoList = res;
+        }
+      }, err => console.log(err),
+      () => { }
+      );
   }
 
   getTodoList(): ITodo[]{
     if(this.sortIngStatus === 4){
       return this.vm.todoList
     }
-    return this.vm.todoList.filter(f => f.status === this.sortIngStatus);   
+    return this.vm.todoList.filter(f => f.status === this.sortIngStatus);
   }
 
   sortingFunc(id: number):void{
@@ -101,9 +119,9 @@ export class FolderPage implements OnInit {
 
   submitFunc():void{
     if(this.addTodoModel.id > 0 ){
-      console.log(this.addTodoModel);   
-      this.updateUiAfterSubmit() 
-      return ; 
+      console.log(this.addTodoModel);
+      this.updateUiAfterSubmit()
+      return ;
     }else{
       this.vm.todoList.push(this.addTodoModel);
       this.resetAddModel();
