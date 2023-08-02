@@ -1,0 +1,7 @@
+<ng-container *ngIf="toaster.toast$ | async as toast">
+  <div class="toast" *ngIf="toast.showToaster">
+    <div class="loader"></div>
+    <img src="../../assets/icon/LMM.png" alt="logo">
+  </div>
+
+</ng-container>

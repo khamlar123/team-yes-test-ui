@@ -5,6 +5,7 @@ import { ITodo } from '../interface/i-todo';
 import { AlertController } from '@ionic/angular';
 import { SubSink } from 'subsink';
 import { ApiService } from '../api/api.service';
+import { ToastService } from '../toast/toast-service';
 @Component({
   selector: 'app-folder',
   templateUrl: './folder.page.html',
@@ -24,14 +25,14 @@ export class FolderPage implements OnInit, OnDestroy {
     title: '',
     desc: '',
     status: 0,
-    createAt: new Date(),
-    updateAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   }
 
   constructor(
     public vm: VmService,
     private alertController: AlertController,
-    private api: ApiService
+    private api: ApiService,
   ) {}
 
   ngOnDestroy(): void {
@@ -46,7 +47,7 @@ export class FolderPage implements OnInit, OnDestroy {
   loadTodoFunc():void{
       this.sub.sink = this.api.getTodo().subscribe(res => {
         if(res){
-            this.vm.todoList = res;
+            this.vm.todoList = this.soting(res, 'id');
         }
       }, err => console.log(err),
       () => { }
@@ -73,19 +74,25 @@ export class FolderPage implements OnInit, OnDestroy {
     return (item === undefined)? 'pending' : (item.status === 0)? 'pending': (item.status === 1)? 'approved': (item.status === 2)? 'complete': 'cancel' ;
   }
 
-  deleteInUi(id: number):void{
-    this.vm.todoList = this.vm.todoList.filter(f => f.id !== id);
-    this.vm.masterTodo = this.vm.masterTodo.filter(f => f.id !== id);
-  }
-
   openSubMenu(id: number):void{
     this.isOpenSub = !this.isOpenSub;
     this.openSubMenueId = id;
   }
 
   deleteFunc():void{
-    //api
-    this.deleteInUi(this.openSubMenueId);
+    this.api.deleteTodo(this.openSubMenueId).subscribe(res => {
+      if(res > 0){
+        this.deleteInUi(this.openSubMenueId);
+        this.openSubMenueId = 0;
+      }
+    },err => console.log(err),
+    () => {}
+    )
+  }
+
+  deleteInUi(id: number):void{
+    this.vm.todoList = this.vm.todoList.filter(f => f.id !== id);
+    this.vm.masterTodo = this.vm.masterTodo.filter(f => f.id !== id);
   }
 
   async checkEvent() {
@@ -119,13 +126,47 @@ export class FolderPage implements OnInit, OnDestroy {
 
   submitFunc():void{
     if(this.addTodoModel.id > 0 ){
-      console.log(this.addTodoModel);
-      this.updateUiAfterSubmit()
+
+
+
+      this.sub.sink = this.api.updateTodo(this.addTodoModel).subscribe(res => {
+        if(res > 0){
+          this.updateUiAfterSubmit();
+          this.openSubMenueId = 0;
+        }
+      }, err => console.log(err),
+      () => {
+    
+      }
+      );
       return ;
     }else{
-      this.vm.todoList.push(this.addTodoModel);
-      this.resetAddModel();
-      this.vm.isOpenModal = false;
+
+      if(this.addTodoModel.title === '' || this.addTodoModel.desc === ''){
+        this.errorAlert('Plese check your data title or description is empty');
+        return ;
+    }
+
+      let addModel = {
+        id: 0,
+        title: this.addTodoModel.title,
+        desc: this.addTodoModel.desc,
+        status: this.addTodoModel.status,
+      }
+
+      this.sub.sink = this.api.addTodo(addModel).subscribe(res => {
+     
+        if(res > 0){
+          this.addTodoModel.id = res;
+          this.vm.todoList.push(this.addTodoModel);
+          this.resetAddModel();
+          this.vm.isOpenModal = false;
+        }
+      },err => console.log(err),
+      () => {
+   
+      }
+      )
     }
 
   }
@@ -133,8 +174,23 @@ export class FolderPage implements OnInit, OnDestroy {
   updateUiAfterSubmit():void{
     this.vm.todoList = this.vm.todoList.filter(f => f.id !== this.addTodoModel.id);
     this.vm.todoList.push(this.addTodoModel);
+    this.vm.todoList = this.soting(this.vm.todoList,'id'); 
     this.resetAddModel();
     this.vm.isOpenModal = false;
+  }
+
+  soting(array: any, field: string): any[] {
+    if (!Array.isArray(array)) {
+      return [];
+    }
+    array.sort((a: any, b: any) => {
+      if (a[field] > b[field]) {
+        return 1;
+      } else {
+        return -1;
+      }
+    });
+    return array;
   }
 
   resetAddModel():void{
@@ -143,11 +199,22 @@ export class FolderPage implements OnInit, OnDestroy {
       title: '',
       desc: '',
       status: 0,
-      createAt: new Date(),
-      updateAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }
 
     this.addTodoModel = reset;
+  }
+
+  async errorAlert(message: string) {
+    const alert = await this.alertController.create({
+      header: 'Alert',
+      subHeader: 'Important message',
+      message: message,
+      buttons: ['OK'],
+    });
+
+    await alert.present();
   }
 
 

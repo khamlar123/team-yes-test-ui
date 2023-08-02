@@ -11,6 +11,7 @@ export class ApiService {
   private getTodoByidUrl = environment.endPoin + 'api/get-todo-byid';
   private addTodoUrl = environment.endPoin + 'api/add-todo';
   private updateTodoUrl = environment.endPoin + 'api/update-todo';
+  private deleteTodoUrl = environment.endPoin + 'api/delete-todo';
 
 
   constructor(private http: HttpClient) { }
@@ -25,12 +26,18 @@ export class ApiService {
     return this.http.get<any>(this.getTodoByidUrl, { params }).pipe(take(1));
   }
 
-  addTodo(model: {id: number, title: string, dsc: string, status: number}): Observable<any> {
+  addTodo(model: {title: string, desc: string, status: number}): Observable<any> {
     return this.http.post<any>(this.addTodoUrl, model).pipe(take(1));
   }
 
-  updateTodo(model: {title: string, dsc: string, status: number}): Observable<any> {
+  updateTodo(model: {id: number, title: string, desc: string, status: number}): Observable<any> {
     return this.http.put<any>(this.updateTodoUrl, model).pipe(take(1));
+  }
+
+  deleteTodo(id: number): Observable<any> {
+    const params = new HttpParams()
+    .set('id', id.toString())
+    return this.http.delete<any>(this.deleteTodoUrl, { params }).pipe(take(1));
   }
 
 }

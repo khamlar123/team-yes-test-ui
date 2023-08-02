@@ -3,7 +3,7 @@ export interface ITodo {
     title: string;
     desc: string;
     status: number;
-    createAt: Date;
-    updateAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
 
 }
