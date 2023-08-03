@@ -4,4 +4,4 @@
 npm install
 
 # 2
-ng serve // ionic serve
+ng serve 
