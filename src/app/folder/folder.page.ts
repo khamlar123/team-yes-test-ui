@@ -136,7 +136,7 @@ export class FolderPage implements OnInit, OnDestroy {
         }
       }, err => console.log(err),
       () => {
-    
+
       }
       );
       return ;
@@ -155,7 +155,7 @@ export class FolderPage implements OnInit, OnDestroy {
       }
 
       this.sub.sink = this.api.addTodo(addModel).subscribe(res => {
-     
+
         if(res > 0){
           this.addTodoModel.id = res;
           this.vm.todoList.push(this.addTodoModel);
@@ -164,7 +164,7 @@ export class FolderPage implements OnInit, OnDestroy {
         }
       },err => console.log(err),
       () => {
-   
+
       }
       )
     }
@@ -174,7 +174,7 @@ export class FolderPage implements OnInit, OnDestroy {
   updateUiAfterSubmit():void{
     this.vm.todoList = this.vm.todoList.filter(f => f.id !== this.addTodoModel.id);
     this.vm.todoList.push(this.addTodoModel);
-    this.vm.todoList = this.soting(this.vm.todoList,'id'); 
+    this.vm.todoList = this.soting(this.vm.todoList,'id');
     this.resetAddModel();
     this.vm.isOpenModal = false;
   }
